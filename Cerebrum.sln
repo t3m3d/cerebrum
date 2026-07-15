@@ -1,0 +1,45 @@
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cerebrum.Core", "src\Cerebrum.Core\Cerebrum.Core.csproj", "{995AB80A-D34B-4D39-9C75-6F0BB0AB2347}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cerebrum.Desktop", "src\Cerebrum.Desktop\Cerebrum.Desktop.csproj", "{046E2F06-E789-4F83-B62A-C93638B24AB6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cerebrum.Broker", "src\Cerebrum.Broker\Cerebrum.Broker.csproj", "{46AF67E8-E43E-494A-B092-938B7C6A6239}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cerebrum.Host", "src\Cerebrum.Host\Cerebrum.Host.csproj", "{0F1AC894-977B-40B6-B548-D37D877E15BD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cerebrum.Tests", "tests\Cerebrum.Tests\Cerebrum.Tests.csproj", "{0878735B-B0E6-4CBD-976E-E857E4B12DCF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{995AB80A-D34B-4D39-9C75-6F0BB0AB2347}.Debug|x64.ActiveCfg = Debug|x64
+		{995AB80A-D34B-4D39-9C75-6F0BB0AB2347}.Debug|x64.Build.0 = Debug|x64
+		{995AB80A-D34B-4D39-9C75-6F0BB0AB2347}.Release|x64.ActiveCfg = Release|x64
+		{995AB80A-D34B-4D39-9C75-6F0BB0AB2347}.Release|x64.Build.0 = Release|x64
+		{046E2F06-E789-4F83-B62A-C93638B24AB6}.Debug|x64.ActiveCfg = Debug|x64
+		{046E2F06-E789-4F83-B62A-C93638B24AB6}.Debug|x64.Build.0 = Debug|x64
+		{046E2F06-E789-4F83-B62A-C93638B24AB6}.Release|x64.ActiveCfg = Release|x64
+		{046E2F06-E789-4F83-B62A-C93638B24AB6}.Release|x64.Build.0 = Release|x64
+		{46AF67E8-E43E-494A-B092-938B7C6A6239}.Debug|x64.ActiveCfg = Debug|x64
+		{46AF67E8-E43E-494A-B092-938B7C6A6239}.Debug|x64.Build.0 = Debug|x64
+		{46AF67E8-E43E-494A-B092-938B7C6A6239}.Release|x64.ActiveCfg = Release|x64
+		{46AF67E8-E43E-494A-B092-938B7C6A6239}.Release|x64.Build.0 = Release|x64
+		{0F1AC894-977B-40B6-B548-D37D877E15BD}.Debug|x64.ActiveCfg = Debug|x64
+		{0F1AC894-977B-40B6-B548-D37D877E15BD}.Debug|x64.Build.0 = Debug|x64
+		{0F1AC894-977B-40B6-B548-D37D877E15BD}.Release|x64.ActiveCfg = Release|x64
+		{0F1AC894-977B-40B6-B548-D37D877E15BD}.Release|x64.Build.0 = Release|x64
+		{0878735B-B0E6-4CBD-976E-E857E4B12DCF}.Debug|x64.ActiveCfg = Debug|x64
+		{0878735B-B0E6-4CBD-976E-E857E4B12DCF}.Debug|x64.Build.0 = Debug|x64
+		{0878735B-B0E6-4CBD-976E-E857E4B12DCF}.Release|x64.ActiveCfg = Release|x64
+		{0878735B-B0E6-4CBD-976E-E857E4B12DCF}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

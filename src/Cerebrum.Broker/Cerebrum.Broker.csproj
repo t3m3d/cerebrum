@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <AssemblyName>Cerebrum.Broker</AssemblyName>
+    <RootNamespace>Cerebrum.Broker</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Cerebrum.Core\Cerebrum.Core.csproj" />
+  </ItemGroup>
+</Project>

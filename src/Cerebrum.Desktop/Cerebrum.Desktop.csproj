@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>Cerebrum.Desktop</AssemblyName>
+    <RootNamespace>Cerebrum.Desktop</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Cerebrum.Core\Cerebrum.Core.csproj" />
+  </ItemGroup>
+</Project>

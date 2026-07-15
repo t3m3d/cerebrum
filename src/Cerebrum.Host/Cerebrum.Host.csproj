@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <AssemblyName>Cerebrum.Host</AssemblyName>
+    <RootNamespace>Cerebrum.Host</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <StartupObject>Cerebrum.Host.App</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Cerebrum.Core\Cerebrum.Core.csproj" />
+    <ProjectReference Include="..\Cerebrum.Desktop\Cerebrum.Desktop.csproj" />
+  </ItemGroup>
+</Project>
