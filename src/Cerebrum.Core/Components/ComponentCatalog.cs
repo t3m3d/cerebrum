@@ -12,7 +12,7 @@ public static class ComponentCatalog
             "cerebrum",
             "Cerebrum.Broker",
             "CEREBRUM_BROKER_PATH",
-            StartsWithSession: true,
+            StartsWithSession: false,
             RestartAfterUnexpectedExit: true,
             IsInternal: true),
         new(

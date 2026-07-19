@@ -45,6 +45,14 @@ try {
     }
 
     Add-Type -AssemblyName UIAutomationClient
+    $unexpectedBrokers = @(
+        Get-Process -Name "Cerebrum.Broker" -ErrorAction SilentlyContinue |
+            Where-Object { $_.Id -notin $existingBrokerIds }
+    )
+    if ($unexpectedBrokers.Count -ne 0) {
+        throw "The on-demand Broker started during an idle desktop smoke test."
+    }
+
     $windowName = New-Object Windows.Automation.PropertyCondition(
         [Windows.Automation.AutomationElement]::NameProperty,
         "Cerebrum Desktop")
@@ -94,7 +102,7 @@ try {
         throw "The host lifecycle was not fully recorded."
     }
 
-    Write-Host "PASS desktop presentation, UI Automation exit, broker lifecycle, and clean shutdown ($Configuration)"
+    Write-Host "PASS desktop presentation, UI Automation exit, cold Broker, and clean shutdown ($Configuration)"
 }
 finally {
     if (-not $hostProcess.HasExited) {

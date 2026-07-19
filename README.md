@@ -29,8 +29,8 @@ The current host:
 
 - creates one DPI-aware desktop surface per connected monitor;
 - discovers development builds, installed builds, explicit component paths, or executables on PATH;
-- starts and supervises Medulla, Thalamus, and the private Cerebrum broker;
-- keeps Cortex on demand and launches it through its documented command-line contract;
+- starts and supervises Medulla and Thalamus;
+- keeps the private Broker and Cortex cold until a capability or file window needs them;
 - restarts session components after unexpected exits, with a bounded restart budget;
 - exposes desktop actions for Cortex, Thalamus, Medulla, session repair, and host exit;
 - persists validated settings with atomic replacement and backup recovery;
@@ -44,7 +44,7 @@ This is a foundation, not shell-replacement mode. It does not hide the Windows t
 
 | Project | Output | Purpose |
 | --- | --- | --- |
-| **Cerebrum.Core** | Library | Platform-neutral component catalog, settings, persistence, executable discovery, repository discovery, and broker protocol |
+| **Cerebrum.Core** | Library | Non-UI component catalog, settings, discovery, broker protocol, and desktop performance policy |
 | **Cerebrum.Desktop** | WPF library | Desktop window, monitor surface, component-health presentation, clock, and user actions |
 | **Cerebrum.Host** | Windows executable | Single session owner, desktop creation, process supervision, restart policy, diagnostics, and cross-component launch behavior |
 | **Cerebrum.Broker** | Background executable | Replaceable out-of-process boundary for Windows APIs that must never be allowed to hang the desktop |
@@ -59,7 +59,7 @@ The desktop surface lives in this repository because it is part of the Cerebrum 
     ├── Explorer                         retained during compatibility mode
     └── Cerebrum.Host.exe               one instance per user/session
         ├── Cerebrum desktop window     one per monitor
-        ├── Cerebrum.Broker.exe         private health-checked process
+        ├── Cerebrum.Broker.exe         launched only for protected integration
         ├── Medulla.exe                 independent taskbar/dock application
         ├── Thalamus.exe                independent window/workspace application
         └── Cortex.exe                  launched only when file work is requested
@@ -72,7 +72,7 @@ Cerebrum does not load assemblies from the three sibling applications. A compone
 
 Cerebrum Host owns the desktop session policy. It decides which optional components should be available, reports their health, and performs bounded restart attempts. It does not own file operations, window tiling, taskbar rendering, package installation, authentication, or composition.
 
-Closing Cerebrum stops its private broker and ends supervision. Medulla, Thalamus, and Cortex remain independent processes; the host does not forcibly terminate them.
+Closing Cerebrum stops its private broker if it was needed and ends supervision. Medulla, Thalamus, and Cortex remain independent processes; the host does not forcibly terminate them.
 
 ### Cerebrum Desktop
 
@@ -80,7 +80,7 @@ The desktop project owns wallpaper presentation, desktop actions, display-specif
 
 ### Cerebrum Broker
 
-The broker is deliberately a separate process. Its version-one protocol currently supports only:
+The broker is deliberately a separate process but remains stopped while idle. Before a protected Windows-integration provider is used, the host starts and health-checks it through its version-one protocol:
 
 - health;
 - capabilities;
@@ -138,8 +138,33 @@ The test runner covers:
 - atomic persistence and backup recovery;
 - absolute data-root enforcement;
 - explicit executable discovery priority;
+- exact Cortex and Thalamus command construction;
+- sibling-repository discovery, including the Windows `cortex-win` boundary;
 - repository-root discovery;
+- complete desktop performance-profile validation and resource-budget comparison;
 - broker protocol serialization and its closed command list.
+
+The read-only full-stack preflight can run while other desktop work is in progress:
+
+    pwsh -NoProfile -File tests\full-stack-preflight.ps1 -Configuration Debug
+    pwsh -NoProfile -File tests\full-stack-preflight.ps1 -Configuration Release
+
+It uses Cerebrum's production resolver to locate the broker, Medulla, Thalamus, and
+Windows Cortex builds. It reads their PE and .NET manifests to require x64 .NET 8
+artifacts, verifies sibling paths remain inside the expected repositories, and
+proves that no component process was launched. It does not create a desktop
+surface, register an AppBar, show an overview, install a hotkey, or open a file window.
+
+The read-only performance harness records a declared stock, compatibility, or
+future Lite process profile without launching or stopping any component:
+
+    pwsh -NoProfile -File tests\performance-capture.ps1 -Configuration Release -Profile Stock -DurationSeconds 30
+
+After equivalent stock and candidate snapshots exist, the policy comparator
+requires a complete candidate session, at least 10% lower private memory, bounded
+idle CPU, and bounded handles. See [Desktop performance policy](docs/performance.md).
+
+    pwsh -NoProfile -File tests\performance-compare.ps1 -Configuration Release -BaselinePath artifacts\performance\stock.json -CandidatePath artifacts\performance\lite.json
 
 A standalone broker health check is also available:
 
@@ -150,10 +175,12 @@ The live named-pipe health and graceful-shutdown flow has a reusable smoke test:
     pwsh -NoProfile -File tests\broker-smoke.ps1 -Configuration Debug
     pwsh -NoProfile -File tests\broker-smoke.ps1 -Configuration Release
 
-The interactive smoke test briefly displays the desktop with Medulla and Thalamus disabled, invokes the accessible Exit action, verifies broker cleanup, and removes its isolated temporary data:
+The interactive smoke test briefly displays the desktop with Medulla and Thalamus disabled, invokes the accessible Exit action, verifies the on-demand broker remains cold, and removes its isolated temporary data:
 
     pwsh -NoProfile -File tests\desktop-smoke.ps1 -Configuration Debug
     pwsh -NoProfile -File tests\desktop-smoke.ps1 -Configuration Release
+
+Run interactive integration only during a review window; see [Full-stack integration review](docs/integration-review.md).
 
 ## Safe first run
 
@@ -161,7 +188,7 @@ The interactive smoke test briefly displays the desktop with Medulla and Thalamu
 2. Build Cerebrum, Medulla, Thalamus, and Cortex in Debug.
 3. Start Cerebrum.Host.exe from the output path above.
 4. Confirm one Cerebrum surface appears on every monitor.
-5. Confirm the health panel reports the broker, Medulla, Thalamus, and Cortex availability.
+5. Confirm the health panel reports the Broker and Cortex available on demand, with Medulla and Thalamus running.
 6. Use Open Cortex, Show Thalamus Overview, and Ensure Medulla Is Running.
 7. Attach or detach a display and confirm the desktop surfaces rebuild.
 8. Choose Exit Cerebrum desktop. Explorer remains the recovery environment.
@@ -290,4 +317,6 @@ Cerebrum is therefore deployable as a future Windows desktop image without becom
 
 - [Architecture and lifecycle](docs/architecture.md)
 - [Component and broker contracts](docs/component-contracts.md)
+- [Full-stack integration review](docs/integration-review.md)
 - [Shell-mode and test-image safety plan](docs/deployment-and-recovery.md)
+- [Desktop performance policy](docs/performance.md)

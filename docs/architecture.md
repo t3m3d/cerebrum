@@ -11,7 +11,7 @@ The architectural priority is recoverability: losing the taskbar, window overvie
 | Process | Owner | Starts automatically | Restarted by host | Writable data owner |
 | --- | --- | --- | --- | --- |
 | Cerebrum.Host.exe | Cerebrum | User starts it in compatibility mode | Windows deployment layer later | Cerebrum Desktop |
-| Cerebrum.Broker.exe | Cerebrum Host | Yes | Yes, within restart budget | None in protocol version 1 |
+| Cerebrum.Broker.exe | Cerebrum Host | No; launched before protected integration | Yes, within restart budget | None in protocol version 1 |
 | Medulla.exe | Medulla | Configurable, default yes | Yes while host supervises | Medulla |
 | Thalamus.exe | Thalamus | Configurable, default yes | Yes while host supervises | Thalamus |
 | Cortex.exe | Cortex | No; launched on demand | No | Cortex |
@@ -40,7 +40,7 @@ Cerebrum.Core deliberately targets plain .NET 8. It contains no WPF types and no
 6. Locate the Cerebrum repository when running a development build.
 7. Create the executable resolver and private broker pipe name.
 8. Enumerate monitors and display a non-activating desktop surface on each.
-9. Start and health-check the broker.
+9. Resolve the Broker but leave it stopped until a protected integration needs it.
 10. Ensure Medulla and Thalamus are running when enabled.
 11. Resolve Cortex but leave it stopped until the user requests file work.
 12. Subscribe to display changes and component exits.
@@ -138,6 +138,10 @@ Every response echoes the request ID and contains success plus a stable status. 
 
 Current commands are health, capabilities, and shutdown. This intentionally tiny protocol proves process isolation and health behavior before high-risk providers are added.
 
+Because protocol version 1 exposes no active Windows provider, startup resolves
+the Broker executable but does not launch it. A future provider must ensure and
+health-check the Broker before sending its first bounded request.
+
 ## Diagnostics
 
 Host diagnostics are written on a background channel. The active file rotates at approximately 1 MiB and retains one previous generation.
@@ -168,7 +172,7 @@ On host shutdown:
 1. detach display-change events;
 2. close every desktop surface;
 3. cancel pending restart delays;
-4. request graceful broker shutdown with a two-second deadline;
+4. request graceful broker shutdown with a two-second deadline if it was started;
 5. dispose process handles without terminating independent sibling applications;
 6. flush the diagnostic channel;
 7. release the single-instance mutex.

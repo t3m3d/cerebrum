@@ -44,7 +44,10 @@ internal sealed class ComponentSupervisor : IAsyncDisposable
         await _sessionGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            await EnsureRunningAsync(ComponentId.Broker, cancellationToken).ConfigureAwait(false);
+            await PublishOnDemandAvailabilityAsync(
+                ComponentId.Broker,
+                "Available on demand for protected Windows integration",
+                cancellationToken).ConfigureAwait(false);
             if (_settings.StartMedulla)
             {
                 await EnsureRunningAsync(ComponentId.Medulla, cancellationToken).ConfigureAwait(false);
@@ -63,17 +66,28 @@ internal sealed class ComponentSupervisor : IAsyncDisposable
                 Publish(ComponentId.Thalamus, ComponentState.Stopped, "Disabled in Cerebrum settings");
             }
 
-            var cortex = await Task.Run(
-                () => _resolver.Resolve(ComponentCatalog.Get(ComponentId.Cortex), _settings), cancellationToken).ConfigureAwait(false);
-            Publish(
+            await PublishOnDemandAvailabilityAsync(
                 ComponentId.Cortex,
-                cortex is null ? ComponentState.Missing : ComponentState.Stopped,
-                cortex is null ? "Executable not found" : "Available on demand");
+                "Available on demand",
+                cancellationToken).ConfigureAwait(false);
         }
         finally
         {
             _sessionGate.Release();
         }
+    }
+
+    private async Task PublishOnDemandAvailabilityAsync(
+        ComponentId id,
+        string availableDetail,
+        CancellationToken cancellationToken)
+    {
+        var resolved = await Task.Run(
+            () => _resolver.Resolve(ComponentCatalog.Get(id), _settings), cancellationToken).ConfigureAwait(false);
+        Publish(
+            id,
+            resolved is null ? ComponentState.Missing : ComponentState.Stopped,
+            resolved is null ? "Executable not found" : availableDetail);
     }
 
     public async Task EnsureRunningAsync(ComponentId id, CancellationToken cancellationToken = default)
@@ -138,10 +152,10 @@ internal sealed class ComponentSupervisor : IAsyncDisposable
     }
 
     public Task OpenCortexAsync(string path, CancellationToken cancellationToken = default) =>
-        InvokeAsync(ComponentId.Cortex, ["--open", path], cancellationToken);
+        InvokeAsync(ComponentId.Cortex, ComponentCommands.CortexOpen(path), cancellationToken);
 
     public Task ShowThalamusOverviewAsync(CancellationToken cancellationToken = default) =>
-        InvokeAsync(ComponentId.Thalamus, ["--overview"], cancellationToken);
+        InvokeAsync(ComponentId.Thalamus, ComponentCommands.ThalamusOverview(), cancellationToken);
 
     public async Task InvokeAsync(
         ComponentId id,

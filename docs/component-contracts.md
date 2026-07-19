@@ -86,7 +86,22 @@ Rules:
 - do not wait for the primary Cortex process to exit;
 - keep all file mutations inside Cortex's file-operation service.
 
+## Shared command construction
+
+Cerebrum keeps its outbound Cortex and Thalamus argument lists in
+`Cerebrum.Core.Components.ComponentCommands`. The host passes every argument
+through `ProcessStartInfo.ArgumentList`; it never constructs a shell command.
+
+The Cortex open contract rejects relative paths before process creation. The
+Thalamus overview contract contains only `--overview`. Deterministic tests pin
+these exact argument lists so UI and supervision changes cannot silently drift
+from the sibling applications' documented command surfaces.
+
 ## Host to broker
+
+Protocol version 1 has no active Windows-integration provider, so the Broker is
+resolved but not launched at ordinary session startup. A provider must start and
+health-check it before sending the first request.
 
 Transport:
 
