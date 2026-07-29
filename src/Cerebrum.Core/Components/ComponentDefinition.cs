@@ -8,6 +8,9 @@ public sealed record ComponentDefinition(
     string RepositoryDirectory,
     string ProjectDirectory,
     string EnvironmentVariable,
-    bool StartsWithSession,
+    ComponentActivation Activation,
     bool RestartAfterUnexpectedExit,
-    bool IsInternal);
+    bool IsInternal)
+{
+    public bool StartsWithSession => Activation == ComponentActivation.Session;
+}

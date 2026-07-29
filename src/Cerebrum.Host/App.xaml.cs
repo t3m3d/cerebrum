@@ -17,12 +17,16 @@ namespace Cerebrum.Host;
 
 public partial class App : Application
 {
+    private const string ExternalOrSystemShutdown = "EXTERNAL-OR-SYSTEM";
+
     private readonly List<DesktopWindow> _desktopWindows = [];
     private SingleInstanceCoordinator? _singleInstance;
     private DiagnosticLog? _diagnostics;
     private ComponentSupervisor? _supervisor;
     private CerebrumSettings? _settings;
     private bool _displayEventsAttached;
+    private int _shutdownRequested;
+    private string _shutdownReason = ExternalOrSystemShutdown;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -30,7 +34,7 @@ public partial class App : Application
         _singleInstance = SingleInstanceCoordinator.Acquire();
         if (!_singleInstance.IsPrimary)
         {
-            Shutdown(0);
+            RequestShutdown("SECONDARY-INSTANCE", 0);
             return;
         }
 
@@ -81,12 +85,18 @@ public partial class App : Application
                 "Cerebrum startup",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
-            Shutdown(1);
+            RequestShutdown("STARTUP-FAILED", 1);
         }
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
+        if (Interlocked.CompareExchange(ref _shutdownRequested, 1, 0) == 0)
+        {
+            _shutdownReason = ExternalOrSystemShutdown;
+            _diagnostics?.Record("CER-HOST-SHUTDOWN-REQUESTED", _shutdownReason);
+        }
+
         if (_displayEventsAttached)
         {
             SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
@@ -104,7 +114,7 @@ public partial class App : Application
 
         if (_diagnostics is not null)
         {
-            _diagnostics.Record("CER-HOST-STOP");
+            _diagnostics.Record("CER-HOST-STOP", _shutdownReason);
             _diagnostics.DisposeAsync().AsTask().GetAwaiter().GetResult();
         }
 
@@ -120,6 +130,12 @@ public partial class App : Application
         }
 
         _desktopWindows.Clear();
+        if (_settings?.StartWallpaper == true)
+        {
+            MainWindow = null;
+            return;
+        }
+
         foreach (var monitor in DisplayMonitorService.Enumerate())
         {
             var viewModel = new DesktopViewModel(
@@ -127,9 +143,10 @@ public partial class App : Application
                 _settings?.WallpaperPath,
                 OpenFilesAsync,
                 ShowOverviewAsync,
+                CaptureRegionAsync,
                 EnsureTaskbarAsync,
                 RepairSessionAsync,
-                () => Shutdown(0));
+                () => RequestShutdown("USER-EXIT", 0));
             var window = new DesktopWindow(monitor, viewModel);
             _desktopWindows.Add(window);
             if (monitor.IsPrimary)
@@ -146,6 +163,9 @@ public partial class App : Application
 
     private Task ShowOverviewAsync() =>
         _supervisor?.ShowThalamusOverviewAsync() ?? Task.CompletedTask;
+
+    private Task CaptureRegionAsync() =>
+        _supervisor?.CaptureSnipAsync(SnipCaptureMode.Region) ?? Task.CompletedTask;
 
     private Task EnsureTaskbarAsync() =>
         _supervisor?.EnsureRunningAsync(ComponentId.Medulla) ?? Task.CompletedTask;
@@ -175,7 +195,9 @@ public partial class App : Application
         {
             _diagnostics?.Record("CER-DISPATCHER-UNHANDLED", args.Exception.GetType().Name);
             args.Handled = true;
-            _ = Dispatcher.BeginInvoke(() => Shutdown(1), DispatcherPriority.Send);
+            _ = Dispatcher.BeginInvoke(
+                () => RequestShutdown("DISPATCHER-FAILURE", 1),
+                DispatcherPriority.Send);
         };
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
             _diagnostics?.Record("CER-DOMAIN-UNHANDLED", args.ExceptionObject.GetType().Name);
@@ -184,6 +206,18 @@ public partial class App : Application
             _diagnostics?.Record("CER-TASK-UNOBSERVED", args.Exception.GetType().Name);
             args.SetObserved();
         };
+    }
+
+    private void RequestShutdown(string reason, int exitCode)
+    {
+        if (Interlocked.Exchange(ref _shutdownRequested, 1) != 0)
+        {
+            return;
+        }
+
+        _shutdownReason = reason;
+        _diagnostics?.Record("CER-HOST-SHUTDOWN-REQUESTED", reason);
+        Shutdown(exitCode);
     }
 
     private static string CreateBrokerPipeName()

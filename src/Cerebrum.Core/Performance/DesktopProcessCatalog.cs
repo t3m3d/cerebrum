@@ -29,13 +29,15 @@ public static class DesktopProcessCatalog
 
     private static readonly HashSet<string> CerebrumSessionNames = new(
         ComponentCatalog.All
-            .Where(component => component.Id != ComponentId.Cortex)
+            .Where(component => component.Activation != ComponentActivation.OnDemand)
             .Select(component => Path.GetFileNameWithoutExtension(component.ExecutableName))
             .Append("Cerebrum.Host"),
         StringComparer.OrdinalIgnoreCase);
 
     private static readonly HashSet<string> OnDemandNames = new(
-        ["Cortex"],
+        ComponentCatalog.All
+            .Where(component => component.Activation == ComponentActivation.OnDemand)
+            .Select(component => Path.GetFileNameWithoutExtension(component.ExecutableName)),
         StringComparer.OrdinalIgnoreCase);
 
     private static readonly HashSet<string> CompositorNames = new(

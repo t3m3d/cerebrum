@@ -41,6 +41,12 @@ internal static class FullStackPreflight
             var resolved = resolver.Resolve(definition, settings);
             if (resolved is null)
             {
+                if (definition.Activation == ComponentActivation.ExternalSupervisor)
+                {
+                    Console.WriteLine($"OPTIONAL {definition.Id}: external supervisor build not found.");
+                    continue;
+                }
+
                 failures++;
                 Console.Error.WriteLine(
                     $"MISSING {definition.Id}: build {definition.RepositoryDirectory}/{definition.ProjectDirectory}.");
@@ -64,7 +70,7 @@ internal static class FullStackPreflight
 
         Console.WriteLine(
             failures == 0
-                ? "FULL_STACK_PREFLIGHT_OK components=4 launched=0"
+                ? $"FULL_STACK_PREFLIGHT_OK components={ComponentCatalog.All.Count} launched=0"
                 : $"FULL_STACK_PREFLIGHT_FAILED failures={failures}");
         return failures == 0 ? 0 : 1;
     }
@@ -91,6 +97,11 @@ internal static class FullStackPreflight
         if (ReadMachine(executablePath) != Amd64Machine)
         {
             throw new InvalidDataException("The resolved executable is not an x64 PE image.");
+        }
+
+        if (definition.Id == ComponentId.Wallpaper)
+        {
+            return "native";
         }
 
         var runtimeConfigPath = Path.ChangeExtension(executablePath, ".runtimeconfig.json");

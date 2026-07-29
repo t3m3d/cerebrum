@@ -11,12 +11,16 @@ The architectural priority is recoverability: losing the taskbar, window overvie
 | Process | Owner | Starts automatically | Restarted by host | Writable data owner |
 | --- | --- | --- | --- | --- |
 | Cerebrum.Host.exe | Cerebrum | User starts it in compatibility mode | Windows deployment layer later | Cerebrum Desktop |
+| found.exe | Found | Started separately; launches Cerebrum | Not by Cerebrum | Found |
 | Cerebrum.Broker.exe | Cerebrum Host | No; launched before protected integration | Yes, within restart budget | None in protocol version 1 |
+| krypton-wallpaper.exe | Wallpaperbank | Configurable, default yes | Yes while host supervises | Wallpaperbank |
+| Parietal.exe | Parietal | Configurable, default yes | Yes while host supervises | Parietal |
 | Medulla.exe | Medulla | Configurable, default yes | Yes while host supervises | Medulla |
 | Thalamus.exe | Thalamus | Configurable, default yes | Yes while host supervises | Thalamus |
 | Cortex.exe | Cortex | No; launched on demand | No | Cortex |
+| Snip.exe | Snip | No; launched on demand | No | Snip |
 
-Cerebrum does not forcibly terminate the three independent sibling applications during ordinary host shutdown. This keeps compatibility-mode development safe and allows each application to keep its own documented lifecycle. A future shell session contract may add explicit graceful shutdown acknowledgments.
+Cerebrum does not forcibly terminate independently running sibling applications during ordinary host shutdown. This keeps compatibility-mode development safe and allows each application to keep its own documented lifecycle. A future shell session contract may add explicit graceful shutdown acknowledgments.
 
 ## Project dependency direction
 
@@ -26,7 +30,7 @@ Cerebrum does not forcibly terminate the three independent sibling applications 
     Cerebrum.Broker ───────────────────────────────► Cerebrum.Core
     Cerebrum.Tests ────────────────────────────────► Cerebrum.Core
 
-No Cerebrum project references Medulla, Thalamus, or Cortex. Their boundaries are process launches, documented arguments, and future separately versioned IPC messages.
+No Cerebrum project references Found, Wallpaperbank, Parietal, Medulla, Thalamus, Cortex, or Snip. Their boundaries are process launches, documented arguments, and future separately versioned IPC messages.
 
 Cerebrum.Core deliberately targets plain .NET 8. It contains no WPF types and no native Windows calls, which keeps settings, discovery policy, contracts, and restart decisions testable without creating a desktop window.
 
@@ -39,11 +43,13 @@ Cerebrum.Core deliberately targets plain .NET 8. It contains no WPF types and no
 5. Load settings from the current JSON document, then its backup, then safe defaults.
 6. Locate the Cerebrum repository when running a development build.
 7. Create the executable resolver and private broker pipe name.
-8. Enumerate monitors and display a non-activating desktop surface on each.
-9. Resolve the Broker but leave it stopped until a protected integration needs it.
-10. Ensure Medulla and Thalamus are running when enabled.
-11. Resolve Cortex but leave it stopped until the user requests file work.
-12. Subscribe to display changes and component exits.
+8. If Wallpaperbank is disabled, enumerate monitors and display a non-activating fallback desktop surface on each; otherwise remain headless.
+9. Observe Found if it is already running; never launch the external supervisor from Cerebrum.
+10. Resolve the Broker but leave it stopped until a protected integration needs it.
+11. Ensure Wallpaperbank, Parietal, Medulla, and Thalamus are running when enabled.
+12. Resolve Cortex and Snip but leave both stopped until their capabilities are requested.
+13. Subscribe to display changes and component exits.
+14. Record an explicit reason for every cooperative host shutdown.
 
 The desktop is shown before sibling executable discovery completes so repository and filesystem work does not delay first presentation.
 
@@ -51,7 +57,7 @@ The desktop is shown before sibling executable discovery completes so repository
 
 Each monitor receives a separate borderless WPF window. Native pixel bounds are applied after HWND creation, allowing correct negative monitor coordinates and Per-Monitor V2 placement without treating physical pixels as WPF device-independent units.
 
-The windows use the tool-window and no-activate extended styles:
+Fallback windows use the tool-window and no-activate extended styles. They are created only when Wallpaperbank is disabled, so no invisible Cerebrum input layer covers the wallpaper or Explorer icons:
 
 - they do not create taskbar entries;
 - clicking a surface does not steal foreground activation from a working application;
@@ -60,7 +66,7 @@ The windows use the tool-window and no-activate extended styles:
 
 When display topology changes, the host closes the previous surfaces, re-enumerates monitors, and creates a new set. Per-monitor icon persistence is not implemented yet; it will use stable monitor identities rather than HWNDs.
 
-Compatibility-mode z-order still needs hardware and Explorer-version testing. Cerebrum does not use undocumented WorkerW parenting in this foundation.
+Wallpaperbank owns its documented WorkerW integration. Cerebrum does not create fallback desktop windows while that external wallpaper is enabled. Compatibility-mode z-order still needs hardware and Explorer-version testing.
 
 ## Component discovery
 
@@ -72,7 +78,7 @@ Executable discovery is ordered and deterministic:
 4. sibling repository build output;
 5. PATH.
 
-The resolver returns a source category, not a personal path, for status and diagnostics. Development discovery scans only each expected repository's source tree and accepts executable files below a build-output directory.
+The resolver returns a source category, not a personal path, for status and diagnostics. Development discovery scans each expected repository's source tree for managed build output and also accepts a declared sibling `dist` artifact such as Wallpaperbank's native executable.
 
 A missing application becomes a Missing component state. It does not fail host startup.
 
@@ -184,6 +190,8 @@ Explorer remains available throughout compatibility mode.
 The next architectural increments are:
 
 - desktop item model and per-monitor layout;
+- Wallpaperbank dynamic monitor/work-area contract;
+- Snip capture and annotation command contract;
 - versioned theme contract;
 - broker provider interface with per-request cancellation;
 - quick-settings and notification surfaces;

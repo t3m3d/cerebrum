@@ -19,15 +19,21 @@ $settings = @{
     ThemePreset = "Cerebrum"
     AccentColor = "#7C8CFF"
     WallpaperPath = $null
+    StartWallpaper = $false
+    StartParietal = $false
     StartMedulla = $false
     StartThalamus = $false
     RestartSessionComponents = $true
     RestartLimit = 3
     Components = @{
+        Found = $null
         Broker = $null
+        Wallpaper = $null
+        Parietal = $null
         Medulla = $null
         Thalamus = $null
         Cortex = $null
+        Snip = $null
     }
 } | ConvertTo-Json -Depth 4
 
@@ -98,7 +104,9 @@ try {
         ""
     }
 
-    if ($log -notmatch "CER-HOST-START" -or $log -notmatch "CER-HOST-STOP") {
+    if ($log -notmatch "CER-HOST-START" -or
+        $log -notmatch "CER-HOST-SHUTDOWN-REQUESTED USER-EXIT" -or
+        $log -notmatch "CER-HOST-STOP USER-EXIT") {
         throw "The host lifecycle was not fully recorded."
     }
 

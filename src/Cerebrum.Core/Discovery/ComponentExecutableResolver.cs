@@ -61,6 +61,22 @@ public sealed class ComponentExecutableResolver
             : Path.Combine(
                 Directory.GetParent(_cerebrumRepositoryRoot)?.FullName ?? _cerebrumRepositoryRoot,
                 definition.RepositoryDirectory);
+        var directOutput = Path.Combine(
+            repositoryRoot,
+            definition.ProjectDirectory,
+            "dist",
+            definition.ExecutableName);
+        if (File.Exists(directOutput))
+        {
+            return directOutput;
+        }
+
+        var projectBuild = FindProjectBuild(repositoryRoot, definition);
+        if (projectBuild is not null)
+        {
+            return projectBuild;
+        }
+
         var sourceRoot = Path.Combine(repositoryRoot, "src");
         if (!Directory.Exists(sourceRoot))
         {
@@ -88,6 +104,47 @@ public sealed class ComponentExecutableResolver
         {
             return null;
         }
+    }
+
+    private string? FindProjectBuild(string repositoryRoot, ComponentDefinition definition)
+    {
+        var candidates = new List<string>();
+        var projectRoots = new[]
+        {
+            Path.Combine(repositoryRoot, definition.ProjectDirectory),
+            Path.Combine(repositoryRoot, "src", definition.ProjectDirectory)
+        };
+
+        foreach (var projectRoot in projectRoots.Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            var binRoot = Path.Combine(projectRoot, "bin");
+            if (!Directory.Exists(binRoot))
+            {
+                continue;
+            }
+
+            try
+            {
+                candidates.AddRange(
+                    Directory.EnumerateFiles(
+                            binRoot,
+                            definition.ExecutableName,
+                            SearchOption.AllDirectories)
+                        .Where(path => !path.Contains(
+                            $"{Path.DirectorySeparatorChar}publish{Path.DirectorySeparatorChar}",
+                            StringComparison.OrdinalIgnoreCase)));
+            }
+            catch (Exception exception) when (
+                exception is IOException or UnauthorizedAccessException)
+            {
+                // An inaccessible development output is treated as unavailable.
+            }
+        }
+
+        return candidates
+            .OrderBy(path => ConfigurationRank(path))
+            .ThenByDescending(File.GetLastWriteTimeUtc)
+            .FirstOrDefault();
     }
 
     private int ConfigurationRank(string path)
@@ -135,10 +192,14 @@ public sealed class ComponentExecutableResolver
 
     private static string? GetConfiguredPath(ComponentId id, ComponentPaths paths) => id switch
     {
+        ComponentId.Found => paths.Found,
         ComponentId.Broker => paths.Broker,
+        ComponentId.Wallpaper => paths.Wallpaper,
+        ComponentId.Parietal => paths.Parietal,
         ComponentId.Medulla => paths.Medulla,
         ComponentId.Thalamus => paths.Thalamus,
         ComponentId.Cortex => paths.Cortex,
+        ComponentId.Snip => paths.Snip,
         _ => null
     };
 

@@ -10,17 +10,17 @@ private memory, normalized idle CPU, handles, and working set.
 The harness is observation-only. It enumerates a fixed list of desktop process
 names in the current Windows session, waits for the requested sample interval,
 and writes one JSON snapshot. It never starts or stops Cerebrum, Explorer,
-Medulla, Thalamus, Cortex, or the broker.
+Wallpaperbank, Parietal, Medulla, Thalamus, Cortex, or the broker.
 
 ## Profiles
 
 A snapshot must match one of these process shapes:
 
-| Profile | Explorer | Cerebrum Host | Medulla | Thalamus | Cortex |
-| --- | --- | --- | --- | --- | --- |
-| Stock | Required | Absent | Absent | Absent | Absent |
-| Compatibility | Required | Required | Required | Required | Absent |
-| Lite | Absent | Required | Required | Required | Absent |
+| Profile | Explorer | Cerebrum Host | Wallpaperbank | Parietal | Medulla | Thalamus | Cortex |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Stock | Required | Absent | Absent | Absent | Absent | Absent | Absent |
+| Compatibility | Required | Required | Required | Required | Required | Required | Absent |
+| Lite | Absent | Required | Required | Required | Required | Required | Absent |
 
 The version-one Broker is allowed but not required in Cerebrum profiles. It now
 remains cold until a protected Windows-integration provider needs it. Cortex is
@@ -36,7 +36,7 @@ The desktop total includes:
 
 - Explorer and the known Windows shell surfaces, including Start, Search, shell
   infrastructure, text input, and Widgets;
-- Cerebrum Host, its Broker when active, Medulla, and Thalamus;
+- Cerebrum Host, its Broker when active, Wallpaperbank, Parietal, Medulla, and Thalamus;
 - Cortex if it is unexpectedly resident.
 
 DWM is captured separately as compositor context when accessible. It is not added to the primary
@@ -87,7 +87,7 @@ A candidate passes only when:
 - its normalized idle CPU is no more than 0.25 percentage points above stock;
 - its handle total is no more than 10% above stock;
 - both snapshots match their declared complete process profiles;
-- Cortex is not resident and every desktop process survived the sample interval.
+- Cortex and the planned on-demand Snip process are not resident, and every desktop process survived the sample interval.
 
 Working set is reported but is not a hard gate because Windows can trim it
 aggressively between runs. Private bytes are the primary per-process allocation

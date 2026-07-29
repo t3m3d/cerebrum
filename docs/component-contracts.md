@@ -2,7 +2,7 @@
 
 ## Rule of separation
 
-Cerebrum, Medulla, Thalamus, and Cortex are independently built applications. They do not reference each other's assemblies and do not edit each other's settings.
+Found, Cerebrum, Wallpaperbank, Parietal, Medulla, Thalamus, Cortex, and Snip are independently built applications. They do not reference each other's assemblies and do not edit each other's settings.
 
 Cross-component behavior uses one of:
 
@@ -11,6 +11,52 @@ Cross-component behavior uses one of:
 3. a read-only, versioned data export.
 
 A source-level interface in one repository is not a cross-component contract.
+## Found to Cerebrum
+
+Executable:
+
+    found.exe --shell
+
+Found is the outer session supervisor. The user selects a `Cerebrum.Host.exe` build in Found, then Found launches and watches that process. Found may restart a nonzero Cerebrum exit within its own bounded policy and always exposes an Explorer recovery action.
+
+Cerebrum treats Found as `ExternalSupervisor`:
+
+- observe whether a same-session Found process is running;
+- report whether a Found build is available;
+- never launch, restart, configure, or shut down Found;
+- never register Found as the Windows shell.
+
+This one-way ownership prevents Found and Cerebrum from restarting each other.
+
+
+## Cerebrum to Wallpaperbank
+
+Current executable:
+
+    wallpaperbank\krypton-lang\dist\krypton-wallpaper.exe
+
+Current use:
+
+- start the executable with no arguments;
+- rely on its single-instance replacement behavior;
+- render it beneath Cerebrum's translucent desktop surfaces;
+- monitor and restart only a copy launched by Cerebrum.
+
+The current Krypton build targets the horizontal secondary display. Dynamic monitor identity, work-area changes, reduced motion, and a graceful shutdown command remain future contract work.
+
+## Cerebrum to Parietal
+
+Executable:
+
+    Parietal.exe
+
+Current use:
+
+- start Parietal with no arguments;
+- rely on its session single-instance boundary;
+- observe only process availability and lifecycle.
+
+Parietal owns the global menu, notification area, clock, status indicators, and top AppBar reservation. Medulla must not duplicate those surfaces.
 
 ## Cerebrum to Medulla
 
@@ -86,9 +132,21 @@ Rules:
 - do not wait for the primary Cortex process to exit;
 - keep all file mutations inside Cortex's file-operation service.
 
+## Cerebrum to Snip
+
+Snip is an on-demand screenshot and annotation application. Cerebrum resolves `Snip.exe` but does not keep it resident.
+
+Documented commands:
+
+    Snip.exe --capture=region
+    Snip.exe --capture=window
+    Snip.exe --capture=fullscreen
+
+Cerebrum currently exposes region capture. Snip owns capture overlays, DPI conversion, annotation, clipboard handling, and export. Cerebrum passes arguments through `ProcessStartInfo.ArgumentList` and does not request elevation.
+
 ## Shared command construction
 
-Cerebrum keeps its outbound Cortex and Thalamus argument lists in
+Cerebrum keeps its outbound Cortex, Thalamus, and Snip argument lists in
 `Cerebrum.Core.Components.ComponentCommands`. The host passes every argument
 through `ProcessStartInfo.ArgumentList`; it never constructs a shell command.
 
@@ -160,17 +218,25 @@ Detail text is presentation-safe and does not contain executable paths or comman
 
 Settings properties:
 
+    Components.Found
     Components.Broker
+    Components.Wallpaper
+    Components.Parietal
     Components.Medulla
     Components.Thalamus
     Components.Cortex
+    Components.Snip
 
 Environment variables:
 
+    CEREBRUM_FOUND_PATH
     CEREBRUM_BROKER_PATH
+    CEREBRUM_WALLPAPER_PATH
+    CEREBRUM_PARIETAL_PATH
     CEREBRUM_MEDULLA_PATH
     CEREBRUM_THALAMUS_PATH
     CEREBRUM_CORTEX_PATH
+    CEREBRUM_SNIP_PATH
 
 All explicit paths must be fully qualified. Invalid paths do not fall back to treating the current directory as trusted input.
 

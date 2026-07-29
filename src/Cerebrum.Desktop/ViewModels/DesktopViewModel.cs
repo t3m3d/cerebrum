@@ -21,6 +21,7 @@ public sealed class DesktopViewModel : INotifyPropertyChanged, IDisposable
         string? wallpaperPath,
         Func<Task> openFiles,
         Func<Task> showOverview,
+        Func<Task> captureRegion,
         Func<Task> ensureTaskbar,
         Func<Task> repairSession,
         Action exit)
@@ -34,6 +35,7 @@ public sealed class DesktopViewModel : INotifyPropertyChanged, IDisposable
         Components = new(ComponentCatalog.All.Select(definition => new ComponentTileViewModel(definition)));
         OpenFilesCommand = new AsyncRelayCommand(openFiles);
         ShowOverviewCommand = new AsyncRelayCommand(showOverview);
+        CaptureRegionCommand = new AsyncRelayCommand(captureRegion);
         EnsureTaskbarCommand = new AsyncRelayCommand(ensureTaskbar);
         RepairSessionCommand = new AsyncRelayCommand(repairSession);
         ExitCommand = new RelayCommand(exit);
@@ -60,6 +62,8 @@ public sealed class DesktopViewModel : INotifyPropertyChanged, IDisposable
     public ICommand OpenFilesCommand { get; }
 
     public ICommand ShowOverviewCommand { get; }
+
+    public ICommand CaptureRegionCommand { get; }
 
     public ICommand EnsureTaskbarCommand { get; }
 

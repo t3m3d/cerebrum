@@ -60,15 +60,24 @@ internal static class Program
 
     private static Task TestComponentCatalogAsync()
     {
-        Assert(ComponentCatalog.All.Count == 4, "The catalog must contain four owned boundaries.");
+        Assert(ComponentCatalog.All.Count == 8, "The catalog must contain eight owned boundaries.");
+        Assert(
+            ComponentCatalog.Get(ComponentId.Found).Activation == ComponentActivation.ExternalSupervisor,
+            "Found must remain the external session supervisor.");
         Assert(ComponentCatalog.Get(ComponentId.Broker).IsInternal, "The broker belongs to the Cerebrum repository.");
         Assert(!ComponentCatalog.Get(ComponentId.Broker).StartsWithSession, "The version-one broker must remain on demand.");
+        Assert(ComponentCatalog.Get(ComponentId.Wallpaper).StartsWithSession, "Wallpaper must start with the session.");
+        Assert(ComponentCatalog.Get(ComponentId.Parietal).StartsWithSession, "Parietal must start with the session.");
         Assert(ComponentCatalog.Get(ComponentId.Medulla).StartsWithSession, "Medulla must start with the session.");
         Assert(ComponentCatalog.Get(ComponentId.Thalamus).StartsWithSession, "Thalamus must start with the session.");
         Assert(!ComponentCatalog.Get(ComponentId.Cortex).StartsWithSession, "Cortex must remain on demand.");
+        Assert(!ComponentCatalog.Get(ComponentId.Snip).StartsWithSession, "Snip must remain on demand.");
         Assert(
             ComponentCatalog.Get(ComponentId.Cortex).RepositoryDirectory == "cortex-win",
             "Cerebrum must discover the Windows Cortex repository.");
+        Assert(
+            ComponentCatalog.Get(ComponentId.Wallpaper).RepositoryDirectory == "wallpaperbank",
+            "Cerebrum must discover Wallpaperbank as a sibling repository.");
         return Task.CompletedTask;
     }
 
@@ -82,6 +91,10 @@ internal static class Program
         Assert(
             ComponentCommands.ThalamusOverview().SequenceEqual(["--overview"]),
             "Thalamus overview must use its documented command.");
+
+        Assert(
+            ComponentCommands.SnipCapture(SnipCaptureMode.Region).SequenceEqual(["--capture=region"]),
+            "Snip region capture must use its documented command.");
 
         var rejectedRelativePath = false;
         try
@@ -108,9 +121,25 @@ internal static class Program
             cortexGroup == DesktopProcessGroup.OnDemand,
             "Cortex must be counted as on demand.");
         Assert(
+            DesktopProcessCatalog.TryGetGroup("Snip", out var snipGroup) &&
+            snipGroup == DesktopProcessGroup.OnDemand,
+            "Snip must be counted as on demand.");
+        Assert(
+            DesktopProcessCatalog.TryGetGroup("found", out var foundGroup) &&
+            foundGroup == DesktopProcessGroup.CerebrumSession,
+            "Found must be counted as the external Cerebrum session supervisor.");
+        Assert(
             DesktopProcessCatalog.TryGetGroup("Cerebrum.Host", out var hostGroup) &&
             hostGroup == DesktopProcessGroup.CerebrumSession,
             "The host must be counted in the Cerebrum session.");
+        Assert(
+            DesktopProcessCatalog.TryGetGroup("krypton-wallpaper", out var wallpaperGroup) &&
+            wallpaperGroup == DesktopProcessGroup.CerebrumSession,
+            "Wallpaperbank must be counted in the Cerebrum session.");
+        Assert(
+            DesktopProcessCatalog.TryGetGroup("Parietal", out var parietalGroup) &&
+            parietalGroup == DesktopProcessGroup.CerebrumSession,
+            "Parietal must be counted in the Cerebrum session.");
         Assert(
             DesktopProcessCatalog.TryGetGroup("dwm", out var compositorGroup) &&
             compositorGroup == DesktopProcessGroup.Compositor,
@@ -144,9 +173,11 @@ internal static class Program
             TimeSpan.FromSeconds(15),
             8,
             [
-                new(2, "Cerebrum.Host", DesktopProcessGroup.CerebrumSession, 150 * mebibyte, 150 * mebibyte, 35, 12, 0.10, true),
-                new(3, "Medulla", DesktopProcessGroup.CerebrumSession, 130 * mebibyte, 140 * mebibyte, 35, 12, 0.10, true),
-                new(4, "Thalamus", DesktopProcessGroup.CerebrumSession, 120 * mebibyte, 130 * mebibyte, 35, 12, 0.10, true)
+                new(2, "Cerebrum.Host", DesktopProcessGroup.CerebrumSession, 140 * mebibyte, 140 * mebibyte, 30, 12, 0.06, true),
+                new(3, "krypton-wallpaper", DesktopProcessGroup.CerebrumSession, 20 * mebibyte, 20 * mebibyte, 10, 4, 0.06, true),
+                new(4, "Parietal", DesktopProcessGroup.CerebrumSession, 20 * mebibyte, 20 * mebibyte, 15, 8, 0.06, true),
+                new(5, "Medulla", DesktopProcessGroup.CerebrumSession, 120 * mebibyte, 130 * mebibyte, 25, 10, 0.06, true),
+                new(6, "Thalamus", DesktopProcessGroup.CerebrumSession, 100 * mebibyte, 110 * mebibyte, 25, 10, 0.06, true)
             ]);
 
         Assert(DesktopPerformancePolicy.ValidateProfile(stock).Count == 0, "The synthetic stock profile must be valid.");
@@ -161,9 +192,11 @@ internal static class Program
             TimeSpan.FromSeconds(15),
             8,
             [
-                new(2, "Cerebrum.Host", DesktopProcessGroup.CerebrumSession, 180 * mebibyte, 170 * mebibyte, 35, 12, 0.10, true),
-                new(3, "Medulla", DesktopProcessGroup.CerebrumSession, 160 * mebibyte, 160 * mebibyte, 35, 12, 0.10, true),
-                new(4, "Thalamus", DesktopProcessGroup.CerebrumSession, 140 * mebibyte, 150 * mebibyte, 35, 12, 0.10, true)
+                new(2, "Cerebrum.Host", DesktopProcessGroup.CerebrumSession, 160 * mebibyte, 150 * mebibyte, 30, 12, 0.06, true),
+                new(3, "krypton-wallpaper", DesktopProcessGroup.CerebrumSession, 20 * mebibyte, 20 * mebibyte, 10, 4, 0.06, true),
+                new(4, "Parietal", DesktopProcessGroup.CerebrumSession, 20 * mebibyte, 20 * mebibyte, 15, 8, 0.06, true),
+                new(5, "Medulla", DesktopProcessGroup.CerebrumSession, 150 * mebibyte, 150 * mebibyte, 25, 10, 0.06, true),
+                new(6, "Thalamus", DesktopProcessGroup.CerebrumSession, 130 * mebibyte, 140 * mebibyte, 25, 10, 0.06, true)
             ]);
         var failing = DesktopPerformancePolicy.Compare(stock, heavy);
         Assert(!failing.MeetsLighterTarget, "A candidate with only a 4% private-byte reduction must fail.");
@@ -290,6 +323,27 @@ internal static class Program
         finally
         {
             Directory.Delete(workspaceRoot, recursive: true);
+        }
+
+        var wallpaperWorkspace = CreateTemporaryDirectory();
+        try
+        {
+            var cerebrumRoot = Directory.CreateDirectory(Path.Combine(wallpaperWorkspace, "cerebrum")).FullName;
+            var wallpaperExecutable = Path.Combine(
+                wallpaperWorkspace,
+                "wallpaperbank",
+                "krypton-lang",
+                "dist",
+                "krypton-wallpaper.exe");
+            Directory.CreateDirectory(Path.GetDirectoryName(wallpaperExecutable)!);
+            File.WriteAllBytes(wallpaperExecutable, [0x4D, 0x5A]);
+            var resolver = new ComponentExecutableResolver(cerebrumRoot, "Debug");
+            var resolved = resolver.Resolve(ComponentCatalog.Get(ComponentId.Wallpaper), new());
+            Assert(resolved?.Path == wallpaperExecutable, "Wallpaperbank dist discovery failed.");
+        }
+        finally
+        {
+            Directory.Delete(wallpaperWorkspace, recursive: true);
         }
 
         return Task.CompletedTask;

@@ -139,6 +139,16 @@
                     </StackPanel>
                 </Button>
 
+                <Button Style="{StaticResource DesktopAction}" Command="{Binding CaptureRegionCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="?" FontSize="22" Width="38" Foreground="{StaticResource AccentBrush}" />
+                        <StackPanel>
+                            <TextBlock Text="Capture with Snip" FontWeight="SemiBold" />
+                            <TextBlock Text="Select a region, annotate, copy, or save" Foreground="{StaticResource MutedBrush}" FontSize="11" />
+                        </StackPanel>
+                    </StackPanel>
+                </Button>
+
                 <Button Style="{StaticResource DesktopAction}" Command="{Binding EnsureTaskbarCommand}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="▬" FontSize="22" Width="38" Foreground="{StaticResource AccentBrush}" />

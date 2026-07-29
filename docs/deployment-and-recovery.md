@@ -12,7 +12,7 @@ This is the only supported mode until the recovery and notification-area work de
 
 Purpose:
 
-- compile and debug the four repositories;
+- compile and debug Cerebrum plus the independently runnable component repositories;
 - run Cerebrum alongside Explorer;
 - validate monitors, component discovery, supervision, and desktop actions.
 
@@ -34,7 +34,7 @@ Purpose:
 
 Required behavior:
 
-- install versioned Cerebrum, Medulla, Thalamus, and Cortex artifacts;
+- install versioned Cerebrum, Wallpaperbank, Parietal, Medulla, Thalamus, Cortex, and—once runnable—Snip artifacts;
 - write no development repository paths;
 - verify signatures before activation;
 - preserve settings across upgrades;
@@ -53,7 +53,9 @@ This stage requires a separate signed deployment/shell supervisor. Cerebrum.Host
 Preflight requirements:
 
 - all required binaries exist and have accepted signatures;
-- Medulla can create its taskbar surfaces;
+- Wallpaperbank can create its wallpaper surface;
+- Parietal can create its top status/global-menu surface;
+- Medulla can create its dock surfaces;
 - Cerebrum can create a desktop on every active monitor;
 - the private broker passes health and capability checks;
 - the known-good Windows Explorer path exists;
@@ -152,7 +154,7 @@ Suggested state transitions:
           ▼
     Explorer recovery
 
-The deployment supervisor, not Medulla or Cortex, owns this state.
+The deployment supervisor—not Wallpaperbank, Parietal, Medulla, Cortex, or Snip—owns this state.
 
 ## Hardware test progression
 

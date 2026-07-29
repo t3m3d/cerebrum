@@ -30,10 +30,14 @@ public static partial class CerebrumSettingsPolicy
         }
 
         return IsOptionalAbsolutePath(settings.WallpaperPath)
+            && IsOptionalAbsolutePath(settings.Components.Found)
             && IsOptionalAbsolutePath(settings.Components.Broker)
+            && IsOptionalAbsolutePath(settings.Components.Wallpaper)
+            && IsOptionalAbsolutePath(settings.Components.Parietal)
             && IsOptionalAbsolutePath(settings.Components.Medulla)
             && IsOptionalAbsolutePath(settings.Components.Thalamus)
-            && IsOptionalAbsolutePath(settings.Components.Cortex);
+            && IsOptionalAbsolutePath(settings.Components.Cortex)
+            && IsOptionalAbsolutePath(settings.Components.Snip);
     }
 
     private static bool IsOptionalAbsolutePath(string? path) =>

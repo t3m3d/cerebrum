@@ -17,6 +17,8 @@ public static class DesktopPerformancePolicy
     private static readonly string[] RequiredCerebrumProcesses =
     [
         "Cerebrum.Host",
+        "krypton-wallpaper",
+        "Parietal",
         "Medulla",
         "Thalamus"
     ];

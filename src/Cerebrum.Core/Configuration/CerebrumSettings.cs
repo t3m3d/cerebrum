@@ -12,6 +12,10 @@ public sealed record CerebrumSettings
 
     public string? WallpaperPath { get; init; }
 
+    public bool StartWallpaper { get; init; } = true;
+
+    public bool StartParietal { get; init; } = true;
+
     public bool StartMedulla { get; init; } = true;
 
     public bool StartThalamus { get; init; } = true;
@@ -25,11 +29,19 @@ public sealed record CerebrumSettings
 
 public sealed record ComponentPaths
 {
+    public string? Found { get; init; }
+
     public string? Broker { get; init; }
+
+    public string? Wallpaper { get; init; }
+
+    public string? Parietal { get; init; }
 
     public string? Medulla { get; init; }
 
     public string? Thalamus { get; init; }
 
     public string? Cortex { get; init; }
+
+    public string? Snip { get; init; }
 }

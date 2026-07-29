@@ -44,10 +44,32 @@ internal sealed class ComponentSupervisor : IAsyncDisposable
         await _sessionGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            await PublishExternalSupervisorStatusAsync(
+                ComponentId.Found,
+                cancellationToken).ConfigureAwait(false);
+
             await PublishOnDemandAvailabilityAsync(
                 ComponentId.Broker,
                 "Available on demand for protected Windows integration",
                 cancellationToken).ConfigureAwait(false);
+            if (_settings.StartWallpaper)
+            {
+                await EnsureRunningAsync(ComponentId.Wallpaper, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                Publish(ComponentId.Wallpaper, ComponentState.Stopped, "Disabled in Cerebrum settings");
+            }
+
+            if (_settings.StartParietal)
+            {
+                await EnsureRunningAsync(ComponentId.Parietal, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                Publish(ComponentId.Parietal, ComponentState.Stopped, "Disabled in Cerebrum settings");
+            }
+
             if (_settings.StartMedulla)
             {
                 await EnsureRunningAsync(ComponentId.Medulla, cancellationToken).ConfigureAwait(false);
@@ -70,6 +92,11 @@ internal sealed class ComponentSupervisor : IAsyncDisposable
                 ComponentId.Cortex,
                 "Available on demand",
                 cancellationToken).ConfigureAwait(false);
+
+            await PublishOnDemandAvailabilityAsync(
+                ComponentId.Snip,
+                "Available on demand for screen capture",
+                cancellationToken).ConfigureAwait(false);
         }
         finally
         {
@@ -90,8 +117,39 @@ internal sealed class ComponentSupervisor : IAsyncDisposable
             resolved is null ? "Executable not found" : availableDetail);
     }
 
+    private async Task PublishExternalSupervisorStatusAsync(
+        ComponentId id,
+        CancellationToken cancellationToken)
+    {
+        var definition = ComponentCatalog.Get(id);
+        using var existing = await Task.Run(
+            () => FindExistingProcess(definition),
+            cancellationToken).ConfigureAwait(false);
+        if (existing is not null)
+        {
+            Publish(id, ComponentState.Running, "External session supervisor online");
+            return;
+        }
+
+        var resolved = await Task.Run(
+            () => _resolver.Resolve(definition, _settings),
+            cancellationToken).ConfigureAwait(false);
+        Publish(
+            id,
+            resolved is null ? ComponentState.Missing : ComponentState.Stopped,
+            resolved is null
+                ? "Optional session supervisor executable not found"
+                : "Available to launch Cerebrum externally");
+    }
+
     public async Task EnsureRunningAsync(ComponentId id, CancellationToken cancellationToken = default)
     {
+        if (ComponentCatalog.Get(id).Activation == ComponentActivation.ExternalSupervisor)
+        {
+            await PublishExternalSupervisorStatusAsync(id, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
         var gate = _componentGates.GetOrAdd(id, _ => new(1, 1));
         await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -153,6 +211,9 @@ internal sealed class ComponentSupervisor : IAsyncDisposable
 
     public Task OpenCortexAsync(string path, CancellationToken cancellationToken = default) =>
         InvokeAsync(ComponentId.Cortex, ComponentCommands.CortexOpen(path), cancellationToken);
+
+    public Task CaptureSnipAsync(SnipCaptureMode mode, CancellationToken cancellationToken = default) =>
+        InvokeAsync(ComponentId.Snip, ComponentCommands.SnipCapture(mode), cancellationToken);
 
     public Task ShowThalamusOverviewAsync(CancellationToken cancellationToken = default) =>
         InvokeAsync(ComponentId.Thalamus, ComponentCommands.ThalamusOverview(), cancellationToken);
